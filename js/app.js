@@ -28,11 +28,11 @@ var authorsFilter = {   },
           )
         });
 
-      return React.createElement( 'div', { className: 'main-page__filter-block' },
-              React.createElement( 'div', { className: 'main-page__filter-block title' }, 'Фильтер' ),
+      return React.createElement( 'div', { className: 'main-page__filter-block__main' },
+              React.createElement( 'div', { className: 'main-page__filter-block title' }, 'Фильтр' ),
               React.createElement( 'div', { className: 'main-page__filter-block filter-form' },
                 React.createElement( 'div', { className: 'main-page__filter-block filter-form__title' }, 'Выберите автора' ),
-                React.createElement( 'form', { className: 'main-page__filter-block filter-form__title js-hiden' },
+                React.createElement( 'form', { className: 'main-page__filter-block filter-form__body js-hiden' },
                   React.createElement( 'div', {},
                     // React.createElement( 'input', { type: 'checkbox', name: '',  className: '', id: 'author-filter-form__checkbox__-1' } ),
                     // React.createElement( 'label', {  className: '', htmlFor: 'author-filter-form__checkbox__-1' }, 'все' ),
@@ -42,7 +42,7 @@ var authorsFilter = {   },
               ),
               React.createElement( 'div', { className: 'main-page__filter-block filter-form' },
                 React.createElement( 'div', { className: 'main-page__filter-block filter-form__title' }, 'Выберите категорию' ),
-                React.createElement( 'form', { className: 'main-page__filter-block filter-form__title js-hiden' },
+                React.createElement( 'form', { className: 'main-page__filter-block filter-form__body js-hiden' },
                   React.createElement( 'div', {},
                     // React.createElement( 'input', { type: 'checkbox', name: '',  className: '', id: 'categories-filter-form__checkbox__-1' } ),
                     // React.createElement( 'label', {  className: '', htmlFor: 'categories-filter-form__checkbox__-1' }, 'все' ),
@@ -68,24 +68,24 @@ var authorsFilter = {   },
               return React.createElement( 'div', { className: 'main-page__quotes-block__quote'},
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string__buttons'},
-                          React.createElement( 'span', { className: 'main-page__quotes-block__quote__string__buttons' }, 'изменить' ),
-                          React.createElement( 'span', { className: 'main-page__quotes-block__quote__string__buttons' }, 'закрыть' )
+                          React.createElement( 'span', { className: 'main-page__quotes-block__quote__string__button edit-button' }, 'изменить' ),
+                          React.createElement( 'span', { className: 'main-page__quotes-block__quote__string__button exit-button' }, 'удалить' )
                         )
                       ),
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
-                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Автор' ),
+                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Автор:' ),
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string value'},  _this.props.authors[ item['author'] ] ? _this.props.authors[ item['author'] ][1] :'' ),
                       ),
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
-                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Цитата' ),
+                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Цитата:' ),
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string value'}, item['text'] ),
                       ),
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
-                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Дата' ),
+                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Дата:' ),
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string value'}, item['date'] ),
                       ),
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
-                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Категория' ),
+                        React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Категория:' ),
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string value'},  _this.props.categories[ item['categories'] ] ? _this.props.categories[ item['categories'] ][1] :''  ),
                       )
                    )
@@ -93,7 +93,7 @@ var authorsFilter = {   },
                   return;
         });
 
-        return React.createElement('div', { className: 'main-page__quotes-block'},
+        return React.createElement('div', { className: 'main-page__quotes-block__main'},
                 itemsQuotes
         )
       }}),
