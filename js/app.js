@@ -9,7 +9,7 @@ function changeFilter( params ) {
     delete( params['obj'][params['id']] );
 
 }
-
+// функция выдающая элемент, в зависимости от того включена функция редактирвоания или нет
 function getInput( params ) {
   if( params['editable'] )
     // если режим редактирования то вместо дива выводим инпут
@@ -17,6 +17,39 @@ function getInput( params ) {
   else
     return React.createElement( 'div', { className: 'main-page__quotes-block__quote__string value'}, params['text'] );
 }
+// выдаёт id с обрезкой ненужных частей ( немножко кастыльненько )
+function getId( param, str ) {
+  return param.split( str )[1];
+}
+// вспомогательная функция для всплывающего окна
+function forHide() {
+  MessageBox.hide();
+}
+
+// класс для всплывающих окон
+var MessageBox = {
+  text: '', //текст сообщение
+  status: ' js-hide',//скрыто окно или нет
+  type: '', //это окно зелённое или красное
+  context: {},//контекст для реакта
+  getElement: function() {
+    return React.createElement( 'div', { className: 'show-box' + this.status + this.type}, this.text );
+  },
+  show: function( params ) {
+    this.text = params['text'];
+    this.status = ' show-box__js-show';
+    this.type = ' show-box__' + params['type'];
+    this.context = params['_this'];
+    this.context.setState( { run: authorsFilter } );
+    //Отложенный запуск закрытия, чтобы окно держалось открытым пару секунд перед закрытием
+    setTimeout( forHide, 1400);
+  },
+  hide: function() {
+    //изменения класса для плавного исчезновения
+    this.status = '  js-hide';
+    this.context.setState( { run: authorsFilter } );
+  }
+};
 
 // формат фильтра authorsFilter = { '1':''  }, categoriesFilter = { '2': '' }
 var authorsFilter = { },  categoriesFilter = { },
@@ -77,8 +110,9 @@ var authorsFilter = { },  categoriesFilter = { },
     render: function render() {
 
       //переприсваваем контекст, и присваем функцию для редактированичя и удаления для удобства
-      var itemsQuotes, _this = this, edFunc = this.props.editableFunction;
+      var itemsQuotes, _this = this, edFunc = this.props.editableFunction, delFunc = this.props.deleteFunction;
 
+      // если есть хотя бы одна цитата
       if (this.props.quotes.length != 0)
         itemsQuotes = this.props.quotes.map(function (item, index) {
           //проверяем есть ли фильтры, если есть на что стоят
@@ -92,8 +126,8 @@ var authorsFilter = { },  categoriesFilter = { },
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string__buttons'},
                           // в зависимости от того, режим редактирование это или нет меняем название кнопоки и отправляем в айди индекс цитаты
-                          React.createElement( 'span', { id: 'quote__' + index, name: index, className: 'main-page__quotes-block__quote__string__button edit-button', onClick: function onClick(e) { edFunc( e.target.id ) } }, item[ 'editable' ]? 'сохранить' : 'изменить' ),
-                          React.createElement( 'span', { className: 'main-page__quotes-block__quote__string__button exit-button' }, 'удалить' )
+                          React.createElement( 'span', { id: 'ed-quote__' + index, name: index, className: 'main-page__quotes-block__quote__string__button edit-button', onClick: function onClick(e) { edFunc( e.target.id ) } }, item[ 'editable' ]? 'сохранить' : 'изменить' ),
+                          React.createElement( 'span', { id: 'del-quote__' + index,  className: 'main-page__quotes-block__quote__string__button exit-button', onClick: function onClick(e) { delFunc( e.target.id ) } }, 'удалить' )
                         )
                       ),
                       // создаём строку для цитаты
@@ -150,11 +184,42 @@ var authorsFilter = { },  categoriesFilter = { },
     },
     editableFunction: function editableFunction( param ) {
       //вычлиняем айдишник цитаты из айди элемента
-      var id = param.split('quote__')[1];
+      var id = getId( param, 'ed-quote__' );
       //проверяем цитата находится в режиме редактирования или нет
       this.state.quotes[ id ][ 'editable' ] = this.state.quotes[ id ][ 'editable' ]? false: true;
       //иницируем преезагрукзу страницы
       this.setState( { quotes: this.state.quotes } );
+
+    },
+    deleteFunction: function deleteFunction( param ) {
+      //вычлиняем айдишник цитаты из айди элемента
+      var id = getId( param, 'del-quote__' );
+      // адакс запрос на сервер для удаления
+      $.ajax({
+      	data: { type: "react" },
+      	url: "api.php?d2i4ey2=aef62sd&id=" + id,
+      	cache: false,
+      	success: function(data) {
+
+          // если всё прошло успешно и на сервере элемент удалён, то удаляем его из массива и вызываем окно
+          if( data == 1 ) {
+            delete( this.state.quotes[id] );
+            //вызывание алерта
+            MessageBox.show( { text: 'удаление прошло успешно', type: 'ok', '_this': this } );
+            this.setState( { run: authorsFilter } );
+          }
+          else
+            MessageBox.show( { text: 'возникла ошибка', type: 'error', '_this': this } ); //вызывание алерта в случае если удаление не удалось
+
+  	    }.bind(this),
+	      error: function(xhr, status, err) {
+
+          MessageBox.show( { text: 'возникла ошибка', type: 'error', '_this': this } ); //вызывание алерта в случае если удаление не удалось
+
+      	}.bind(this) //биндим контекст к аджакс запросу
+      });
+    },
+    addFunction: function addFunction() {
 
     },
     loadCommentsFromServer: function loadCommentsFromServer() {
@@ -189,11 +254,14 @@ var authorsFilter = { },  categoriesFilter = { },
       return { quotes: [], authors: [], categories: [] };
     },
     render: function render() {
+      var addFunc = this.addFunction;
       return React.createElement(
         'div',
         { className: 'main-page__wrapper' },
+        MessageBox.getElement(), //всплывающее окно
         React.createElement( filterBlock, { categories: this.state.categories, authors: this.state.authors, selectClickFunction: this.selectClickFunction, filterFunction: this.filterFunction } ),
-        React.createElement( quotesBlock, { categories: this.state.categories, authors: this.state.authors, quotes: this.state.quotes, editableFunction: this.editableFunction } ),
+        React.createElement( 'div', { className: 'main-page__add-button button ', onClick: function onClick(e) { addFunc() } }, 'добавить цитату' ),
+        React.createElement( quotesBlock, { categories: this.state.categories, authors: this.state.authors, quotes: this.state.quotes, editableFunction: this.editableFunction, deleteFunction: this.deleteFunction } ),
       );
     }
 });
