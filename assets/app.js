@@ -13,7 +13,7 @@ function changeFilter( params ) {
 function getInput( params ) {
   if( params['editable'] )
     // если режим редактирования то вместо дива выводим инпут
-    return React.createElement( 'input', { type: 'text', className: 'main-page__quotes-block__quote__string value', value: params['text'], onChange: function onChange(){this.handleChange}  } );
+    return React.createElement( 'input', { type: 'text', className: 'main-page__quotes-block__quote__string value', value: params['text'], onChange: function onChange(e){  quoteEdit( { name: e.target.name,  value: e.target.value, field: params['field'], quoteId: params['quoteId'], '_this' : params['_this'], quotes : params['quotes'] } ); this.handleChange; }  } );
   else
     return React.createElement( 'div', { className: 'main-page__quotes-block__quote__string value'}, params['text'] );
 }
@@ -24,6 +24,24 @@ function getId( param, str ) {
 // вспомогательная функция для всплывающего окна
 function forHide() {
   MessageBox.hide();
+}
+// функция для редактирования цитата
+function quoteEdit( params ) {
+  //в вспомогательный массив для отредактированных элемнетов добавляем информацию из основного и информацию из инпутов
+  editQuote[ params['quoteId'] ] = params['quotes'][ params['quoteId'] ];
+  editQuote[ params['quoteId'] ][ params['field']  ] =  params['value'] ;
+}
+// вызов окна что всё успешно
+function msBoxShowOk( param ) {
+  MessageBox.show( { text: 'удаление прошло успешно', type: 'ok', '_this': param } );
+}
+// вызов окна что всё плохо
+function msBoxShowEr( param, errorText ) {
+  MessageBox.show( { text: errorText, type: 'error', '_this': param } );
+}
+//функция для кодирования текста в  ссылку
+function urlE( param ) {
+  return encodeURIComponent( param );
 }
 
 // класс для всплывающих окон
@@ -49,11 +67,10 @@ var MessageBox = {
     this.status = '  js-hide';
     this.context.setState( { run: authorsFilter } );
   }
-};
-
+},
 // формат фильтра authorsFilter = { '1':''  }, categoriesFilter = { '2': '' }
-var authorsFilter = { },  categoriesFilter = { },
-    addAuthorsFilter = { }, addCategoriesFilter = { },
+    authorsFilter = { },  categoriesFilter = { },
+    addAuthorsFilter = { }, addCategoriesFilter = { }, editQuote = { },
 // блок для фильтрации
     filterBlock = React.createClass({
     displayName: 'filterBlock',
@@ -64,14 +81,16 @@ var authorsFilter = { },  categoriesFilter = { },
       //передаём свойство со списком авторов и категорий, чтобы выстроить фильтры
 
       if (this.props.authors.length != 0)
-        itemsAuthors = this.props.authors.map(function (item) {
+        itemsAuthors = this.props.authors.map(function (item, index) {
+          if( index != 0 )
           return React.createElement( 'div', {},
             React.createElement( 'input', { type: 'checkbox', name: item[0],  className: '', id: 'author-filter-form__checkbox__' + item[0], onClick: function onClick(e) { selFunc( true, e.target.name, e.target.checked  ) } } ),
             React.createElement( 'label', {  className: '', htmlFor: 'author-filter-form__checkbox__' + item[0] }, item[1] ),
           );
         });
       if (this.props.categories.length != 0)
-        itemsCategories = this.props.categories.map(function (item) {
+        itemsCategories = this.props.categories.map(function (item, index) {
+          if ( index != 0 )
           return React.createElement( 'div', {},
             React.createElement( 'input', { type: 'checkbox', name: item[0],  className: '', id: 'categories-filter-form__checkbox__' + item[0], onClick: function onClick(e) { selFunc( false, e.target.name, e.target.checked  ) } } ),
             React.createElement( 'label', {  className: '', htmlFor: 'categories-filter-form__checkbox__' + item[0] }, item[1]  ),
@@ -117,6 +136,7 @@ var authorsFilter = { },  categoriesFilter = { },
         itemsQuotes = this.props.quotes.map(function (item, index) {
           //проверяем есть ли фильтры, если есть на что стоят
           //проверка фильтра по авторам
+
           if( authorsFilter[ item['author'] ] != undefined || $.isEmptyObject(authorsFilter) )
             //проверка фильтра по категориям
             if( categoriesFilter[ item['categories'] ] != undefined || $.isEmptyObject(categoriesFilter) )
@@ -134,25 +154,25 @@ var authorsFilter = { },  categoriesFilter = { },
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Автор:' ),
                         // отправляем в функцию, которая смотрит какое поле нам выводить в зависимости от того режим редактирования это или нет
-                        getInput( {'editable' : item[ 'editable' ], 'text' :  _this.props.authors[ item['author'] ] ? _this.props.authors[ item['author'] ][1] :''  } ),
+                        getInput( { quotes : _this.props.quotes , 'quoteId' : index, 'field' : 'author-text' , 'editable' : item[ 'editable' ], 'text' :  _this.props.authors[ item['author'] ] ? _this.props.authors[ item['author'] ][1] :''  } ),
                       ),
                       // создаём строку для цитаты
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Цитата:' ),
                         // отправляем в функцию, которая смотрит какое поле нам выводить в зависимости от того режим редактирования это или нет
-                        getInput( {'editable' : item[ 'editable' ], 'text' : item['text']  } )
+                        getInput( { quotes : _this.props.quotes, 'quoteId'  : index, 'field' : 'text', 'editable' : item[ 'editable' ], 'text' : item['text']  } )
                       ),
                       // создаём строку для цитаты
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Дата:' ),
                         // отправляем в функцию, которая смотрит какое поле нам выводить в зависимости от того режим редактирования это или нет
-                        getInput( {'editable' : item[ 'editable' ], 'text' : item['date']  } )
+                        getInput( { quotes : _this.props.quotes, 'quoteId' : index, 'field' : 'date', 'editable' : item[ 'editable' ], 'text' : item['date']  } )
                       ),
                       // создаём строку для цитаты
                       React.createElement( 'div', { className: 'main-page__quotes-block__quote__string'},
                         React.createElement( 'div', { className: 'main-page__quotes-block__quote__string caption'}, 'Категория:' ),
                         // отправляем в функцию, которая смотрит какое поле нам выводить в зависимости от того режим редактирования это или нет
-                        getInput( {'editable' : item[ 'editable' ], 'text' : _this.props.categories[ item['categories'] ] ? _this.props.categories[ item['categories'] ][1] :''  } )
+                        getInput( { quotes : _this.props.quotes, 'quoteId' : index, 'field' : 'categories-text', 'editable' : item[ 'editable' ], 'text' : _this.props.categories[ item['categories'] ] ? _this.props.categories[ item['categories'] ][1] :''  } )
                       )
                    )
               else
@@ -185,10 +205,65 @@ var authorsFilter = { },  categoriesFilter = { },
     editableFunction: function editableFunction( param ) {
       //вычлиняем айдишник цитаты из айди элемента
       var id = getId( param, 'ed-quote__' );
+
+      //если редактирование уже включено
+      if( this.state.quotes[ id ][ 'editable' ] ) {
+
+        //не допускаем пустых полей
+        if( editQuote[id] == undefined) {
+          msBoxShowOk( this, 'изменения сохранены' );
+          //проверяем цитата находится в режиме редактирования или нет
+          this.state.quotes[ id ][ 'editable' ] = this.state.quotes[ id ][ 'editable' ]? false: true;
+          //иницируем преезагрукзу страницы
+          this.setState( { run: authorsFilter } );
+          return;
+        }
+        if( editQuote[id]['date'] == ''|| editQuote[id]['text'] == '' || editQuote[id]['author'] == '' || editQuote[id]['categories'] == ''  ) {
+          msBoxShowEr( this, 'не допускаются пустые поля' );
+          return;
+        }
+        // не допускаем полей длинее 255
+        if( editQuote[id]['date'].length > 255 || editQuote[id]['text'].length > 255 || editQuote[id]['author-text'].length > 255 || editQuote[id]['categories-text'].length > 255  ) {
+          msBoxShowEr( this, 'в поля нельзя ввести больше 255 символов' );
+          return;
+        }
+
+        // переброс изменённой цитаты, в список основных цитат
+        this.state.quotes[ id ] = editQuote[id];
+
+        // второй уровень валидации на сервере
+        $.ajax({
+          data: { type: "react" },
+          url: "api.php?d2i4ey2=12kd8&id=" + id + '&author=' + editQuote[id]['author'] + '&authortext=' + urlE( editQuote[id]['author-text'] ) + '&categories=' + editQuote[id]['categories'] + '&categoriestext=' + urlE( editQuote[id]['categories-text'] ) + '&text' + urlE( editQuote[id]['text'] ) + '&date' + urlE( editQuote[id]['date'] ),
+          cache: false,
+          success: function(data) {
+
+            // если всё прошло успешно
+            // если категории новые, то получаем их
+            this.setState( { authors: data.authors} );
+            this.setState( { categories: data.categories} );
+            // исправляем у цитаты авторов и категории если они изменились
+            this.state.quotes[ id ][ 'author' ] = data[ 'authors-return' ];
+            this.state.quotes[ id ][ 'categories' ] = data[ 'categories-return' ];
+            // удалить элемент из дополнительного объекта
+            delete(editQuote[id]);
+            // иницируем перерисовку дома
+            this.setState( { run: authorsFilter } );
+
+          }.bind(this),
+          error: function(xhr, status, err) {
+              // msBoxShowEr( this, 'произошло ошибка' );//вызывание алерта в случае если удаление не удалось
+              msBoxShowEr( this, 'ошибка валидации' );
+
+          }.bind(this) //биндим контекст к аджакс запросу
+        });
+
+      }
+
       //проверяем цитата находится в режиме редактирования или нет
       this.state.quotes[ id ][ 'editable' ] = this.state.quotes[ id ][ 'editable' ]? false: true;
       //иницируем преезагрукзу страницы
-      this.setState( { quotes: this.state.quotes } );
+      this.setState( { run: authorsFilter } );
 
     },
     deleteFunction: function deleteFunction( param ) {
@@ -205,21 +280,30 @@ var authorsFilter = { },  categoriesFilter = { },
           if( data == 1 ) {
             delete( this.state.quotes[id] );
             //вызывание алерта
-            MessageBox.show( { text: 'удаление прошло успешно', type: 'ok', '_this': this } );
+            msBoxShowOk( this );
+
             this.setState( { run: authorsFilter } );
           }
           else
-            MessageBox.show( { text: 'возникла ошибка', type: 'error', '_this': this } ); //вызывание алерта в случае если удаление не удалось
+            msBoxShowEr( this, 'произошла ошибка' );//вызывание алерта в случае если удаление не удалось
+            // MessageBox.show( { text: 'возникла ошибка', type: 'error', '_this': this } );
 
   	    }.bind(this),
 	      error: function(xhr, status, err) {
-
-          MessageBox.show( { text: 'возникла ошибка', type: 'error', '_this': this } ); //вызывание алерта в случае если удаление не удалось
+            msBoxShowEr( this, 'произошло ошибка' );//вызывание алерта в случае если удаление не удалось
+          // MessageBox.show( { text: 'возникла ошибка', type: 'error', '_this': this } ); //вызывание алерта в случае если удаление не удалось
 
       	}.bind(this) //биндим контекст к аджакс запросу
       });
     },
     addFunction: function addFunction() {
+
+      //вставляем в начало пустой элемент
+      this.state.quotes.unshift( { 'author': -1, 'categories': -1, 'text': '', 'date':'', 'editable': true} );
+      //делаем его редактируемым
+      editQuote[0] = this.state.quotes[0];
+      //инициируем перерисовку страницы
+      this.setState( { run: authorsFilter } );
 
     },
     loadCommentsFromServer: function loadCommentsFromServer() {
